@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import firebase from "./firebase";
 
 export default function UrlInputSection() {
   const [inputUrl, setInputUrl] = useState('');
@@ -12,11 +13,31 @@ export default function UrlInputSection() {
 
   const handleShortenClick = async () => {
     try {
-      const response = await axios.get(`http://tinyurl.com/api-create.php?url=${inputUrl}`);
-      setShortenedUrl(response.data);
+      // Add the original URL to the "original_urls" collection
+      const originalUrlDocRef = await firestore.collection('original_urls').add({
+        url: inputUrl,
+        created_at: firebase.firestore.FieldValue.serverTimestamp() // Store creation timestamp
+      });
+
+      // Generate a unique shortened code (you can use your own logic)
+      const shortenedCode = generateShortenedCode(originalUrlDocRef.id);
+      
+      // Add the shortened URL to the "shortened_urls" collection
+      await firestore.collection('shortened_urls').doc(shortenedCode).set({
+        original_url_ref: originalUrlDocRef
+      });
+
+      // Set the shortened URL for display
+      setShortenedUrl(`https://yourdomain.com/${shortenedCode}`);
     } catch (error) {
       console.error('Error shortening URL:', error);
     }
+  };
+
+  const generateShortenedCode = (id) => {
+    // Your custom logic to generate shortened codes
+    // For simplicity, you can use the document ID
+    return id.substring(0, 6); // Using the first 6 characters of the ID
   };
 
   const handleCopyClick = () => {
@@ -25,9 +46,9 @@ export default function UrlInputSection() {
   };
 
   return (
-    <div className="d-flex flex-column align-items-center  vh-100"style={{ marginTop: '20vh' }}>
+    <div className="d-flex flex-column align-items-center vh-100" style={{ marginTop: '20vh' }}>
       <div className="text-center mb-4">
-        <h4 className="h2 mb-0 "style={{color:"white",fontfamily: "Proximanova,sans-serif",fontSize:"40px"}}>Paste URL Here:</h4>
+        <h4 className="h2 mb-0" style={{ color: 'white', fontFamily: 'Proximanova, sans-serif', fontSize: '40px' }}>Paste URL Here:</h4>
       </div>
       <input
         type="text"
@@ -43,7 +64,7 @@ export default function UrlInputSection() {
 
       {shortenedUrl && (
         <div className="mt-4 text-center">
-          <h4 className="h2 mb-3"style={{color:"white",fontfamily: "Proximanova,sans-serif",fontSize:"40px"}}>Shortened URL:</h4>
+          <h4 className="h2 mb-3" style={{ color: 'white', fontFamily: 'Proximanova, sans-serif', fontSize: '40px' }}>Shortened URL:</h4>
           <input
             type="text"
             value={shortenedUrl}

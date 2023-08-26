@@ -3,7 +3,7 @@ import Navbar from './components/Navbar';
 import UrlInputSection from './components/UrlInputSection';
 import Footer from './components/Footer';
 import About from './components/About';
-import firebase from "./firebase";
+
 import {
   BrowserRouter as Router,
   Routes,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import firebase from "./firebase";
+import { app, firestore } from "../firebase_setup/firebase";
+import { addDoc, collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function UrlInputSection() {
   const [inputUrl, setInputUrl] = useState('');
@@ -13,26 +13,27 @@ export default function UrlInputSection() {
 
   const handleShortenClick = async () => {
     try {
-      // Add the original URL to the "original_urls" collection
-      const originalUrlDocRef = await firestore.collection('original_urls').add({
-        url: inputUrl,
-        created_at: firebase.firestore.FieldValue.serverTimestamp() // Store creation timestamp
+      const db = firestore;
+  
+      const originalUrlDocRef = await addDoc(collection(db, 'original_urls'), {
+        created_at: serverTimestamp(),
+        url: inputUrl
+        
       });
-
-      // Generate a unique shortened code (you can use your own logic)
+  
       const shortenedCode = generateShortenedCode(originalUrlDocRef.id);
-      
-      // Add the shortened URL to the "shortened_urls" collection
-      await firestore.collection('shortened_urls').doc(shortenedCode).set({
+      const shortenedUrlDocRef = doc(db, 'shortened_urls', shortenedCode);
+  
+      await setDoc(shortenedUrlDocRef, {
         original_url_ref: originalUrlDocRef
       });
-
-      // Set the shortened URL for display
+  
       setShortenedUrl(`https://yourdomain.com/${shortenedCode}`);
     } catch (error) {
       console.error('Error shortening URL:', error);
     }
   };
+  
 
   const generateShortenedCode = (id) => {
     // Your custom logic to generate shortened codes

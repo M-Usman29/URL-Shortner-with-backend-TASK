@@ -33,7 +33,7 @@ export default function UrlInputSection() {
         original_url_ref: originalUrlDocRef,
       });
 
-      setShortenedUrl(`https://yourdomain.com/${shortenedCode}`);
+      setShortenedUrl(`https://${shortenedCode}`);
     } catch (error) {
       console.error("Error shortening URL:", error);
     }
